@@ -1,3 +1,4 @@
+# Overview
 
 Inspired by [this blog post](https://nivleshc.wordpress.com/2021/06/27/use-aws-lambda-to-send-slack-notifications-for-running-amazon-ec2-instances/), but it has been extended to use terraform to automate the deployment across an organization.  
 
