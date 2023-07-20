@@ -22,12 +22,6 @@ variable "region" {
   default     = "eu-west-1"
 }
 
-variable "s3_bucket" {
-  description = "The S3 bucket where the zipped Lambda function will be uploaded"
-  type        = string
-  default     = "ec2-slack-notification"
-}
-
 provider "aws" {
   region = var.region
 }
@@ -42,8 +36,13 @@ data "archive_file" "lambda_zip" {
 
 # S3 bucket to hold the lambda code
 
+
+resource "aws_s3_bucket" "bucket" {
+  bucket_prefix = "ec2-slack-notification-code-"
+}
+
 resource "aws_s3_bucket_object" "object" {
-  bucket = var.s3_bucket
+  bucket = aws_s3_bucket.bucket.id
   key    = "ec2_slack_notification.zip"
   source = data.archive_file.lambda_zip.output_path
   etag   = filemd5(data.archive_file.lambda_zip.output_path)
