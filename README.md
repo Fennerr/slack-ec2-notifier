@@ -35,10 +35,9 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 git clone https://github.com/Fennerr/slack-ec2-notifier
 cd slack-ec2-notifier
 terraform init
-terraform apply
+terraform apply -auto-approve
 ```
-* Input the Slack webhook URL
-* Answer `yes` (or specify `-auto-approve` in the previous command) when asked if you are happy with the plan
+* Input the Slack webhook URL and wait for it to deploy
 
 ## Notes
 
