@@ -8,7 +8,6 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 
 # Installation instructions
 
-
 ## Slack instructions
 
 * In your Slack Workspace, create a Slack channel where the notifications from the AWS Lambda function will be published (ie `aws-notifications`).
@@ -30,7 +29,7 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 
 ## Terraform instructions
 
-
+* Clone the repository: `git clone https://github.com/Fennerr/slack-ec2-notifier`
 * Install [terraform cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 * Run `terraform init`
 * Run `terraform apply`
