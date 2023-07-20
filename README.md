@@ -31,10 +31,12 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 
 
 * Install [terraform cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
-* `git clone https://github.com/Fennerr/slack-ec2-notifier`
-* `cd slack-ec2-notifier`
-* `terraform init`
-* `terraform apply`
+```
+git clone https://github.com/Fennerr/slack-ec2-notifier
+cd slack-ec2-notifier
+terraform init
+terraform apply
+```
 * Input the Slack webhook URL
 * Answer `yes` (or specify `-auto-approve` in the previous command) when asked if you are happy with the plan
 
