@@ -1,6 +1,10 @@
 
 Inspired by [this blog post](https://nivleshc.wordpress.com/2021/06/27/use-aws-lambda-to-send-slack-notifications-for-running-amazon-ec2-instances/), but it has been extended to use terraform to automate the deployment across an organization.
 
+This repository contains terraform to deploy a lambda function across an organization.
+Each day, the lambda function is executed and it will get a list of running EC2 instances and some metadata on each instance, and post a message to the slack channel.
+This is to assist with keeping an eye on the number of running EC2 instances within an organization for cost purposes.  
+
 # Installation instructions
 
 
