@@ -39,6 +39,7 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 
 ## Notes
 
-* Slack Webhooks do not support authentication. If you need more control over who can post to your Slack channel, you might want to consider using a Slack App with a bot token, which would allow you to use OAuth 2.0 bearer token for authentication. Note that this is a more complex solution and may not be necessary depending on your use case.
-* The security of Slack webhooks comes from the obscurity and complexity of the URL itself. Anyone who possesses the webhook URL can post a message to the associated Slack channel. 
 * The StackSet can be deployed from an account in the organization that is a delegated admin for CloudFormation StackSet. If you wish to do so then uncomment the `call_as = "DELEGATED_ADMIN"` line in `main.tf`.
+* **Slack Webhooks do not support authentication**. If you need more control over who can post to your Slack channel, you might want to consider using a Slack App with a bot token, which would allow you to use OAuth 2.0 bearer token for authentication. Note that this is a more complex solution and may not be necessary depending on your use case.
+* The security of Slack webhooks comes from the obscurity and complexity of the URL itself. Anyone who possesses the webhook URL can post a message to the associated Slack channel. 
+
