@@ -115,10 +115,10 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       }
     }
     Resources = {
-      MyLambdaFunction = {
+      EC2NotifierLambdaFunction = {
         Type = "AWS::Lambda::Function"
         Properties = {
-          Handler = "index.handler"
+          Handler = "slack_notifier.lambda_handler"
           Role = aws_iam_role.lambda_role.arn
           Code = {
             S3Bucket = var.s3_bucket
@@ -134,15 +134,15 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
           }
         }
       }
-      MyCloudWatchEventRule = {
+      CloudWatchEventRule = {
         Type = "AWS::Events::Rule"
         Properties = {
           ScheduleExpression = "cron(0 9 * * ? *)"
           Targets = [{
             Arn = {
-              "Fn::GetAtt" = ["MyLambdaFunction", "Arn"]
+              "Fn::GetAtt" = ["EC2NotifierLambdaFunction", "Arn"]
             }
-            Id = "MyLambdaFunction"
+            Id = "EC2NotifierLambdaFunction"
           }]
         }
       }
@@ -152,10 +152,10 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
           Action = "lambda:InvokeFunction"
           Principal = "events.amazonaws.com"
           FunctionName = {
-            "Fn::GetAtt" = ["MyLambdaFunction", "Arn"]
+            "Fn::GetAtt" = ["EC2NotifierLambdaFunction", "Arn"]
           }
           SourceArn = {
-            "Fn::GetAtt" = ["MyCloudWatchEventRule", "Arn"]
+            "Fn::GetAtt" = ["CloudWatchEventRule", "Arn"]
           }
         }
       }
