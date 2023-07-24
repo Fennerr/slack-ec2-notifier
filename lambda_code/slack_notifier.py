@@ -23,8 +23,8 @@ def get_current_account_id():
     return account_id
 
 def find_running_ec2instances():
-  regions = ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2', 'ap-south-1', 'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3',
-             'ap-southeast-1', 'ap-southeast-2', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-west-3', 'eu-north-1', 'sa-east-1']
+  client = boto3.client("ec2")
+  regions = client.describe_regions()['Regions']
 
   acccount_id = get_current_account_id()
   notification_message = f'The following EC2 instance(s) are currently running in {acccount_id}: \n'
