@@ -75,6 +75,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       "DeploymentLambdaRole": {
         "Type": "AWS::IAM::Role",
         "Properties": {
+          "RoleName": "EC2-Slack-Notifier-Lambda-Role",
           "AssumeRolePolicyDocument": {
             "Version": "2012-10-17",
             "Statement": [
@@ -97,7 +98,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
           ],
           "Policies": [
             {
-              "PolicyName": "LambdaExecutionPolicy",
+              "PolicyName": "EC2-Read-Access",
               "PolicyDocument": {
                 "Version": "2012-10-17",
                 "Statement": [
@@ -161,12 +162,32 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       }
     }
   })
+
+  capabilities = ["CAPABILITY_NAMED_IAM"]
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false    
+  }
+
+  lifecycle {
+    # Applying the stack changes the value of this, so on subsequent applies, it looks like config drift
+    ignore_changes = [
+      administration_role_arn,
+    ]
+  }
+
 }
 
 resource "aws_cloudformation_stack_set_instance" "stack_set_instance" {
   deployment_targets {
       organizational_unit_ids = [data.aws_organizations_organization.current_org.roots[0].id]
     }
+
+  operation_preferences {
+    max_concurrent_count = 3
+    region_concurrency_type = "PARALLEL"
+  }
 
   region         = var.region
   stack_set_name = aws_cloudformation_stack_set.organization_stack_set.name
