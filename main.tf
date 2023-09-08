@@ -93,7 +93,7 @@ resource "aws_iam_role_policy" "lambda_ec2_query_policy" {
 # CloudFormation Resources
 
 resource "aws_cloudformation_stack_set" "organization_stack_set" {
-  name = "EC2 Slack Notification"
+  name = "EC2-Slack-Notification"
 
   #call_as = "DELEGATED_ADMIN"
   permission_model = "SERVICE_MANAGED"
@@ -120,7 +120,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
           Handler = "slack_notifier.lambda_handler"
           Role = aws_iam_role.lambda_role.arn
           Code = {
-            S3Bucket = var.s3_bucket
+            S3Bucket = aws_s3_bucket.bucket.id
             S3Key = aws_s3_bucket_object.object.key
           }
           Runtime = "python3.8"
@@ -162,7 +162,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
   })
 }
 
-resource "aws_cloudformation_stack_set_instance" "stak_set_instance" {
+resource "aws_cloudformation_stack_set_instance" "stack_set_instance" {
   deployment_targets {
       organizational_unit_ids = [data.aws_organizations_organization.current_org.roots[0].id]
     }
