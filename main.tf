@@ -48,6 +48,28 @@ resource "aws_s3_bucket_object" "object" {
   etag   = filemd5(data.archive_file.lambda_zip.output_path)
 }
 
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  bucket = aws_s3_bucket.bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = "*",
+        Action = "s3:GetObject",
+        Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*",
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalOrgID" = data.aws_organizations_organization.id
+          }
+        }
+      }
+    ]
+  })
+}
+
+
 # CloudFormation Resources
 
 resource "aws_cloudformation_stack_set" "organization_stack_set" {
@@ -57,9 +79,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
   permission_model = "SERVICE_MANAGED"
 
   parameters = {
-    ParameterKey   = "SlackWebhookURL"
-    ParameterValue = var.slack_webhook_url
-    UsePreviousValue = false
+    SlackWebhookURL = var.slack_webhook_url
   }
 
   template_body = jsonencode({
@@ -72,7 +92,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       }
     }
     Resources = {
-      "LambdaRole": {
+      LambdaRole: {
         "Type": "AWS::IAM::Role",
         "Properties": {
           "RoleName": "EC2-Slack-Notifier-Lambda-Role",
@@ -94,7 +114,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
           },
           "Path": "/",
           "ManagedPolicyArns": [
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaExecute"
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
           ],
           "Policies": [
             {
@@ -116,11 +136,12 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
             }
           ]
         }
+      }
       EC2NotifierLambdaFunction = {
         Type = "AWS::Lambda::Function"
         Properties = {
           Handler = "slack_notifier.lambda_handler"
-          Role = { "Fn::GetAtt": [ "NotificationLambdaRole", "Arn"] },
+          Role = { "Fn::GetAtt": [ "LambdaRole", "Arn"] },
           Code = {
             S3Bucket = aws_s3_bucket.bucket.id
             S3Key = aws_s3_bucket_object.object.key
