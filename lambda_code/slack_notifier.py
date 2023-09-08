@@ -35,7 +35,7 @@ def find_running_ec2instances():
 
   for region in regions:
     client = boto3.client("ec2", region_name=region)
-    running_ec2_instances = client.describe_instances(
+    response = client.describe_instances(
         Filters=[
             {
                 'Name': 'instance-state-name',
@@ -47,31 +47,39 @@ def find_running_ec2instances():
         ],
         MaxResults=1000,
     )
-    num_running_ec2_instances = len(running_ec2_instances['Reservations'])
+    
+    running_ec2_instances = []
+    for reservation in response['Reservations']:
+        for instance in reservation['Instances']:
+            tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
+            if not tags.get('SLACK') == 'silent':
+                running_ec2_instances.append(instance)
+    
+    num_running_ec2_instances = len(running_ec2_instances)
 
     if num_running_ec2_instances > 0:
         # there is at least one running instance in this region
         total_running_ec2_instances += num_running_ec2_instances
 
-        for instance in running_ec2_instances['Reservations']:
-            ec2_info = 'InstanceType:' + instance['Instances'][0]['InstanceType']
+        for instance in running_ec2_instances:
+            ec2_info = 'InstanceType:' + instance['InstanceType']
             
             # determine how many days this instance has been running
-            launch_time = instance['Instances'][0]['LaunchTime']
+            launch_time = instance['LaunchTime']
             current_time = datetime.utcnow()
             days_running = (current_time - launch_time).days
             ec2_info += ' DaysRunning:' + str(days_running)
             
 
             try:
-               ec2_info += ' SSHKeyName:' + instance['Instances'][0]['KeyName']
+               ec2_info += ' SSHKeyName:' + instance['KeyName']
             except:
                 print('>find_running_ec2instances:no ssh key name found')
 
             # find the name of this instance, if it exists
             ec2_instance_name = ''
             try:
-                tags = instance['Instances'][0]['Tags']
+                tags = instance['Tags']
 
                 # find a tag with Key == Name. This will contain the instance name. If no such tag exists then the name for this instance will be reported as blank
                 for tag in tags:
