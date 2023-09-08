@@ -72,7 +72,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       }
     }
     Resources = {
-      "DeploymentLambdaRole": {
+      "LambdaRole": {
         "Type": "AWS::IAM::Role",
         "Properties": {
           "RoleName": "EC2-Slack-Notifier-Lambda-Role",
