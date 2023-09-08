@@ -28,6 +28,14 @@ provider "aws" {
 
 data "aws_organizations_organization" "current_org" {}
 
+# Update the list of excluded account ids
+locals {
+  all_accounts = data.aws_organizations_organization.current_org.accounts
+  excluded_accounts = ["excluded_account_id_1", "excluded_account_id_2"]
+  included_accounts = [for account in local.all_accounts : account.id if !(account.id in local.excluded_accounts)]
+}
+
+
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir = "./lambda_code"
@@ -164,7 +172,7 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
 
 resource "aws_cloudformation_stack_set_instance" "stak_set_instance" {
   deployment_targets {
-      organizational_unit_ids = [data.aws_organizations_organization.current_org.roots[0].id]
+      account_ids = local.included_accounts
     }
 
   region         = var.region
