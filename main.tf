@@ -48,48 +48,6 @@ resource "aws_s3_bucket_object" "object" {
   etag   = filemd5(data.archive_file.lambda_zip.output_path)
 }
 
-# IAM Resources
-
-resource "aws_iam_role" "lambda_role" {
-  name = "lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Principal = {
-          Service = "lambda.amazonaws.com",
-        },
-        Effect = "Allow",
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_exec_policy" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaExecute"
-}
-
-resource "aws_iam_role_policy" "lambda_ec2_query_policy" {
-  name = "lambda_ec2_query_policy"
-  role = aws_iam_role.lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = [
-          "ec2:Describe*"
-        ],
-        Effect = "Allow",
-        Resource = "*"
-      }
-    ]
-  })
-}
-
 # CloudFormation Resources
 
 resource "aws_cloudformation_stack_set" "organization_stack_set" {
@@ -114,11 +72,54 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
       }
     }
     Resources = {
+      "DeploymentLambdaRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": [
+                    "lambda.amazonaws.com"
+                  ]
+                },
+                "Action": [
+                  "sts:AssumeRole"
+                ]
+              }
+            ]
+          },
+          "Path": "/",
+          "ManagedPolicyArns": [
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaExecute"
+          ],
+          "Policies": [
+            {
+              "PolicyName": "LambdaExecutionPolicy",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "ec2:Describe*"
+                    ],
+                    "Resource": [
+                      "*"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
       EC2NotifierLambdaFunction = {
         Type = "AWS::Lambda::Function"
         Properties = {
           Handler = "slack_notifier.lambda_handler"
-          Role = aws_iam_role.lambda_role.arn
+          Role = { "Fn::GetAtt": [ "NotificationLambdaRole", "Arn"] },
           Code = {
             S3Bucket = aws_s3_bucket.bucket.id
             S3Key = aws_s3_bucket_object.object.key
