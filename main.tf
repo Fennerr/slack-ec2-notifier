@@ -32,7 +32,7 @@ data "aws_organizations_organization" "current_org" {}
 locals {
   all_accounts = data.aws_organizations_organization.current_org.accounts
   excluded_accounts = ["excluded_account_id_1", "excluded_account_id_2"]
-  included_accounts = [for account in local.all_accounts : account.id if !(account.id in local.excluded_accounts)]
+  included_accounts = [for account in local.all_accounts : account.id if !contains(local.excluded_accounts, account.id)]
 }
 
 
