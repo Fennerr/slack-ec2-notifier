@@ -31,6 +31,8 @@ This is to assist with keeping an eye on the number of running EC2 instances wit
 
 
 * Install [terraform cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* Add account IDs to the `excluded_accounts` array in `main.tf`
+* Deploy the solution:
 ```
 git clone https://github.com/Fennerr/slack-ec2-notifier
 cd slack-ec2-notifier
