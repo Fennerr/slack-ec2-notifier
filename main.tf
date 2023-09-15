@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.27"
+      version = "~> 5.0"
     }
     archive = {
       source  = "hashicorp/archive"
@@ -146,7 +146,8 @@ resource "aws_cloudformation_stack_set" "organization_stack_set" {
             S3Bucket = aws_s3_bucket.bucket.id
             S3Key = aws_s3_bucket_object.object.key
           }
-          Runtime = "python3.8"
+          Timeout = 100
+          Runtime = "python3.10"
           Environment = {
             Variables = {
               SLACK_WEBHOOK_URL = {

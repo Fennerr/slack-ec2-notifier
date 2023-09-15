@@ -3,14 +3,21 @@ import json
 import boto3
 import requests
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 def send_slack_message(slack_webhook_url, slack_message):
   print('>send_slack_message:slack_message:'+slack_message)
-
   slack_payload = {
-      'text': slack_message
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                'text': slack_message
+            }
+        }
+    ]
   }
-
   print('>send_slack_message:posting message to slack channel')
   response = requests.post(slack_webhook_url, json.dumps(slack_payload))
   response_json = response.text  # convert to json for easy handling
@@ -47,32 +54,33 @@ def find_running_ec2instances():
         ],
         MaxResults=1000,
     )
-    
+
     running_ec2_instances = []
     for reservation in response['Reservations']:
         for instance in reservation['Instances']:
             tags = {tag['Key']: tag['Value'] for tag in instance.get('Tags', [])}
             if not tags.get('SLACK') == 'silent':
                 running_ec2_instances.append(instance)
-    
+
     num_running_ec2_instances = len(running_ec2_instances)
 
     if num_running_ec2_instances > 0:
         # there is at least one running instance in this region
+        notification_message += f'*{region} ({num_running_ec2_instances}):* \n'
         total_running_ec2_instances += num_running_ec2_instances
 
         for instance in running_ec2_instances:
-            ec2_info = 'InstanceType:' + instance['InstanceType']
-            
+            ec2_info = '\t' + 'InstanceType: ' + instance['InstanceType'] + '\n'
+
             # determine how many days this instance has been running
             launch_time = instance['LaunchTime']
-            current_time = datetime.utcnow()
+            current_time = datetime.now(tz=ZoneInfo("UTC"))
             days_running = (current_time - launch_time).days
-            ec2_info += ' DaysRunning:' + str(days_running)
-            
+            ec2_info += '\t' + 'DaysRunning: ' + str(days_running) + '\n'
+
 
             try:
-               ec2_info += ' SSHKeyName:' + instance['KeyName']
+               ec2_info += '\t' + 'SSHKeyName: ' + instance['KeyName'] + '\n'
             except:
                 print('>find_running_ec2instances:no ssh key name found')
 
@@ -88,7 +96,7 @@ def find_running_ec2instances():
             except:
                 ec2_instance_name = ''  # if no tags were found, leave ec2 instance name as blank
 
-            ec2_info = 'Region:' + region + ' Name:' + ec2_instance_name + ' ' + ec2_info
+            ec2_info = '• Name:' + ec2_instance_name + '\n' + ec2_info
 
             print('>find_running_ec2instances:running ec2 instance found:' + str(ec2_info))
             notification_message += ec2_info + '\n'
@@ -109,3 +117,4 @@ def lambda_handler(event, context):
       'statusCode': 200,
       'body': json.dumps('Number of EC2 instances currently running in all regions:' + str(num_running_instances))
   }
+
